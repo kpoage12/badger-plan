@@ -1,5 +1,11 @@
 const classes = [
   {
+    name: "Comp Sci 640",
+    subtitle: "Introduction to Computer Networks",
+    credits: 3,
+  },
+
+  {
     name: "Comp Sci 400",
     subtitle: "Programming III",
     credits: 3,
@@ -14,6 +20,7 @@ const classes = [
     subtitle: "Programming II",
     credits: 3,
   },
+
   {
     name: "Comp Sci 537",
     subtitle: "Operating Systems",
@@ -22,11 +29,6 @@ const classes = [
   {
     name: "Comp Sci 571",
     subtitle: "Building User Interfaces",
-    credits: 3,
-  },
-  {
-    name: "Math 475",
-    subtitle: "Combinatorics",
     credits: 3,
   },
 ];

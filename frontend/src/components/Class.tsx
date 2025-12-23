@@ -16,8 +16,11 @@ function Class({ name, subtitle, credits }: ClassProps) {
           <Card.Subtitle className="mb-2 text-muted">{subtitle}</Card.Subtitle>
           <Card.Text className="fw-semibold">{credits} credits</Card.Text>
         </div>
-        <Button variant="outline-primary" className="mt-auto w-100">
+        <Button variant="outline-primary" className="mt-2 w-100">
           Add Course
+        </Button>
+        <Button variant="outline-secondary" className="mt-2 w-100">
+          More Details
         </Button>
       </Card.Body>
     </Card>
