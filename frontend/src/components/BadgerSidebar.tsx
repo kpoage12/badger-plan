@@ -9,7 +9,7 @@ function BadgerSidebar() {
     <Sidebar className="badgerSidebar" width="260px">
       <div className="sidebarHeader">
         <div className="sidebarBrand">BadgerPlan</div>
-        <div className="sidebarSub">UW–Madison course planner</div>
+        <div className="sidebarSub">UW-Madison course planner</div>
       </div>
 
       <Menu className="sidebarMenu">

@@ -1,6 +1,9 @@
 import "./App.css";
 import { Routes, Route } from "react-router-dom";
 import BadgerSidebar from "./components/BadgerSidebar";
+import Builder from "./components/Builder";
+import Browse from "./components/Browse";
+import Home from "./components/Home";
 
 function App() {
   return (
@@ -8,9 +11,9 @@ function App() {
       <BadgerSidebar />
       <main className="appMain">
         <Routes>
-          <Route path="/" element={<h1>Home</h1>} />
-          <Route path="/browse" element={<h1>Browse</h1>} />
-          <Route path="/builder" element={<h1>Build Plan</h1>} />
+          <Route path="/" element={<Home />} />
+          <Route path="/browse" element={<Browse />} />
+          <Route path="/builder" element={<Builder />} />
         </Routes>
       </main>
     </div>
