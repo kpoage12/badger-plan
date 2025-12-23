@@ -9,7 +9,7 @@ interface ClassProps {
 
 function Class({ name, subtitle, credits }: ClassProps) {
   return (
-    <Card style={{ width: "18rem" }}>
+    <Card className="mt-2" style={{ width: "18rem" }}>
       <Card.Body>
         <div>
           <Card.Title className="mb-1">{name}</Card.Title>

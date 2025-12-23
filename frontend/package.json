@@ -16,6 +16,7 @@
     "react-dom": "^19.2.0",
     "react-pro-sidebar": "^1.1.0",
     "react-router-dom": "^7.11.0",
+    "react-search-input": "^0.11.3",
     "swiper": "^12.0.3"
   },
   "devDependencies": {

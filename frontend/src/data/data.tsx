@@ -31,6 +31,38 @@ const classes = [
     subtitle: "Building User Interfaces",
     credits: 3,
   },
+  {
+    name: "Comp Sci 252",
+    subtitle: "Introduction to Computer Engineering",
+    credits: 3,
+  },
+
+  {
+    name: "Comp Sci 354",
+    subtitle: "Machine Organization",
+    credits: 3,
+  },
+  {
+    name: "Comp Sci 564",
+    subtitle: "Database Systems and Management",
+    credits: 3,
+  },
+  {
+    name: "Comp Sci 577",
+    subtitle: "Introduction to Algorithms",
+    credits: 3,
+  },
+
+  {
+    name: "Comp Sci 240",
+    subtitle: "Discrete Math",
+    credits: 4,
+  },
+  {
+    name: "Comp Sci 200",
+    subtitle: "Programming I",
+    credits: 3,
+  },
 ];
 
 export default classes;
