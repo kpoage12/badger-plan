@@ -1,6 +1,5 @@
 import Class from "./Class";
 import classes from "../data/data";
-import { Card } from "react-bootstrap";
 
 function Browse() {
   return (
