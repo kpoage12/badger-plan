@@ -36,7 +36,7 @@ function Home() {
               <div className="stepIcon">2</div>
               <Card.Title className="mt-3">Set goals</Card.Title>
               <Card.Text>
-                Choose your term, credit load, and preferences.
+                Choose your term, class count, and preferences.
               </Card.Text>
             </Card.Body>
           </Card>

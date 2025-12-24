@@ -6,10 +6,12 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Badge from "react-bootstrap/Badge";
+import Preferences from "./Preferences";
 
-import courses from "../data/data"; // [{ name, subtitle, credits }, ...]
+import courses from "../data/data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { Link } from "react-router-dom";
+
 type Course = { name: string; subtitle: string; credits: number };
 
 function Builder() {
