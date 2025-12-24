@@ -25,8 +25,8 @@ function BadgerSidebar() {
         </MenuItem>
 
         <MenuItem
-          component={<Link to="/builder" />}
-          active={pathname === "/builder"}
+          component={<Link to="/builder/completed-courses" />}
+          active={pathname === "/builder/completed-courses"}
         >
           Build Plan
         </MenuItem>

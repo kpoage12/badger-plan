@@ -13,7 +13,7 @@ function Home() {
         <p className="lead text muted mb-4">
           Build a semester plan based on what you've already taken
         </p>
-        <Button as={Link} to="/builder" size="lg">
+        <Button as={Link} to="/builder/completed-courses" size="lg">
           Start Planning
         </Button>
       </div>

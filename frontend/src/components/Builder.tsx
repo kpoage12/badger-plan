@@ -9,6 +9,7 @@ import Badge from "react-bootstrap/Badge";
 
 import courses from "../data/data"; // [{ name, subtitle, credits }, ...]
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { Link } from "react-router-dom";
 type Course = { name: string; subtitle: string; credits: number };
 
 function Builder() {
@@ -120,6 +121,16 @@ function Builder() {
             </ListGroup>
             <div className="text-muted small mt-3">
               Tip: click a course to add it to your completed list.
+            </div>
+            <div className="d-flex justify-content-end mt-4">
+              <Button
+                variant="primary"
+                size="lg"
+                as={Link}
+                to={"/builder/preferences"}
+              >
+                Continue to Preferences →
+              </Button>
             </div>
           </div>
         </Col>
