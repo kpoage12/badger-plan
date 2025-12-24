@@ -8,15 +8,14 @@ import Button from "react-bootstrap/Button";
 import Badge from "react-bootstrap/Badge";
 
 import courses from "../data/data"; // [{ name, subtitle, credits }, ...]
-
-interface ClassProps {
-  name: string;
-  subtitle: string;
-  credits: number;
-}
+import { useLocalStorage } from "../hooks/useLocalStorage";
+type Course = { name: string; subtitle: string; credits: number };
 
 function Builder() {
-  const [completed, setCompleted] = useState<Course[]>([]);
+  const [completed, setCompleted] = useLocalStorage<Course[]>(
+    "badgerplan.completedCourses",
+    []
+  );
   const [query, setQuery] = useState("");
 
   const completedSet = useMemo(
