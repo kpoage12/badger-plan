@@ -2,14 +2,9 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { useState } from "react";
 import Modal from "react-bootstrap/esm/Modal";
+import type { CsCourse } from "../types/course";
 
-interface ClassProps {
-  name: string;
-  subtitle: string;
-  credits: number;
-}
-
-function Class({ name, subtitle, credits }: ClassProps) {
+function Class({ code, title, credits }: CsCourse) {
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
@@ -19,8 +14,8 @@ function Class({ name, subtitle, credits }: ClassProps) {
     <Card className="mt-2" style={{ width: "18rem" }}>
       <Card.Body>
         <div>
-          <Card.Title className="mb-1">{name}</Card.Title>
-          <Card.Subtitle className="mb-2 text-muted">{subtitle}</Card.Subtitle>
+          <Card.Title className="mb-1">{code}</Card.Title>
+          <Card.Subtitle className="mb-2 text-muted">{title}</Card.Subtitle>
           <Card.Text className="fw-semibold">{credits} credits</Card.Text>
         </div>
         <Button
@@ -36,11 +31,11 @@ function Class({ name, subtitle, credits }: ClassProps) {
         >
           <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>
-              <Modal.Title>{name}</Modal.Title>
+              <Modal.Title>{code}</Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
-              {subtitle}
+              {title}
               <br />
               {credits} credits
             </Modal.Body>

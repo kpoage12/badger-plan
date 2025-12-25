@@ -6,45 +6,46 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Badge from "react-bootstrap/Badge";
-import Preferences from "./Preferences";
 
 import courses from "../data/data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { Link } from "react-router-dom";
-
-type Course = { name: string; subtitle: string; credits: number };
+import { DEFAULT_CS_PREFS, type CsPrefs } from "../types/preferences";
+import type { CsCourse } from "../types/course";
 
 function Builder() {
-  const [completed, setCompleted] = useLocalStorage<Course[]>(
+  const [completed, setCompleted] = useLocalStorage<CsCourse[]>(
     "badgerplan.completedCourses",
     []
   );
   const [query, setQuery] = useState("");
 
+  const [prefs, setPrefs] = useLocalStorage<CsPrefs>(
+    "badgerplan.csPrefs.v1",
+    DEFAULT_CS_PREFS
+  );
+
   const completedSet = useMemo(
-    () => new Set(completed.map((c) => c.name)),
+    () => new Set(completed.map((c) => c.id)),
     [completed]
   );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return courses
-      .filter((c) => !completedSet.has(c.name))
+      .filter((c) => !completedSet.has(c.id))
       .filter((c) => {
         if (!q) return true;
-        return (
-          c.name.toLowerCase().includes(q) ||
-          c.subtitle.toLowerCase().includes(q)
-        );
+        return c.id.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
       });
   }, [query, completedSet]);
 
-  function addCourse(course: Course) {
+  function addCourse(course: CsCourse) {
     setCompleted((prev) => [...prev, course]);
   }
 
   function removeCourse(name: string) {
-    setCompleted((prev) => prev.filter((c) => c.name !== name));
+    setCompleted((prev) => prev.filter((c) => c.id !== name));
   }
 
   const totalCredits = completed.reduce((sum, c) => sum + c.credits, 0);
@@ -65,18 +66,18 @@ function Builder() {
               <ListGroup variant="flush">
                 {completed.map((c) => (
                   <ListGroup.Item
-                    key={c.name}
+                    key={c.id}
                     className="d-flex align-items-start justify-content-between"
                   >
                     <div>
-                      <div className="fw-semibold">{c.name}</div>
-                      <div className="text-muted small">{c.subtitle}</div>
+                      <div className="fw-semibold">{c.code}</div>
+                      <div className="text-muted small">{c.title}</div>
                       <div className="small">{c.credits} credits</div>
                     </div>
                     <Button
                       variant="outline-danger"
                       size="sm"
-                      onClick={() => removeCourse(c.name)}
+                      onClick={() => removeCourse(c.id)}
                     >
                       Remove
                     </Button>
@@ -105,14 +106,14 @@ function Builder() {
               ) : (
                 filtered.map((c) => (
                   <ListGroup.Item
-                    key={c.name}
+                    key={c.id}
                     action
                     onClick={() => addCourse(c)}
                     className="d-flex justify-content-between align-items-center"
                   >
                     <div>
-                      <div className="fw-semibold">{c.name}</div>
-                      <div className="text-muted small">{c.subtitle}</div>
+                      <div className="fw-semibold">{c.code}</div>
+                      <div className="text-muted small">{c.title}</div>
                     </div>
                     <Badge bg="light" text="dark">
                       {c.credits}

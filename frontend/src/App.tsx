@@ -4,7 +4,8 @@ import BadgerSidebar from "./components/BadgerSidebar";
 import Builder from "./components/Builder";
 import Browse from "./components/Browse";
 import Home from "./components/Home";
-import Preferences from "./components/Preferences";
+import PreferencesPage from "./components/PreferencesPage";
+import Schedule from "./components/Schedule";
 
 function App() {
   return (
@@ -15,8 +16,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/browse" element={<Browse />} />
           <Route path="/builder/completed-courses" element={<Builder />} />
-          <Route path="/builder/preferences" element={<Preferences />} />
-          <Route path="/builder/schedule " element={<Builder />} />
+          <Route path="/builder/preferences" element={<PreferencesPage />} />
+          <Route path="/builder/scheduler" element={<Schedule />} />
         </Routes>
       </main>
     </div>

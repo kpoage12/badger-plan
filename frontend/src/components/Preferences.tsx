@@ -5,30 +5,25 @@ import ButtonGroup from "react-bootstrap/ButtonGroup";
 import ToggleButton from "react-bootstrap/ToggleButton";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
+import type { Focus, Pacing } from "../types/course";
+import type { CsPrefs } from "../types/preferences";
 
-type Focus = "systems" | "theory" | "ai_ml" | "software" | "none";
-type Pacing = "light" | "balanced" | "intense";
+type Props = {
+  value: CsPrefs;
+  onChange: (next: CsPrefs) => void;
+};
 
-function Preferences() {
-  const [csCount, setCsCount] = useState(3);
-  const csCountOptions = [2, 3, 4];
-  const [pacing, setPacing] = useState("balanced");
-  const [maxHeavy, setMaxHeavy] = useState(2);
-
-  const [focus, setFocus] = useState<Focus>("systems");
+function Preferences({ value, onChange }: Props) {
+  const csCountOptions: Array<2 | 3 | 4> = [2, 3, 4];
 
   const focusOptions: { value: Focus; label: string }[] = [
     { value: "systems", label: "Systems" },
     { value: "theory", label: "Theory" },
     { value: "ai_ml", label: "AI / ML" },
     { value: "software", label: "Software" },
-    { value: "none", label: "No Preference " },
+    { value: "none", label: "No Preference" },
   ];
-
-  const [prioritizeUnlocks, setPrioritizeUnlocks] = useState(true);
-  const [avoidTooManyProg, setAvoidTooManyProg] = useState(true);
 
   return (
     <Card className="pageCard preferencesCard">
@@ -38,7 +33,7 @@ function Preferences() {
           size="sm"
           className="px-2 mb-4"
           as={Link}
-          to={"/builder/completed-courses"}
+          to="/builder/completed-courses"
         >
           ← Back
         </Button>
@@ -58,17 +53,18 @@ function Preferences() {
             <div className="text-muted small mb-2">
               How many CS classes do you want in your term?
             </div>
+
             <ButtonGroup>
               {csCountOptions.map((n) => (
                 <ToggleButton
-                  variant="outline-primary"
                   key={n}
-                  id={`credit-${n}`}
+                  id={`csCount-${n}`}
                   type="radio"
-                  name="creditLoad"
+                  name="csCount"
                   value={n}
-                  checked={csCount == n}
-                  onChange={() => setCsCount(n)}
+                  variant={value.csCount === n ? "primary" : "outline-primary"}
+                  checked={value.csCount === n}
+                  onChange={() => onChange({ ...value, csCount: n })}
                 >
                   {n}
                 </ToggleButton>
@@ -83,8 +79,10 @@ function Preferences() {
             </div>
 
             <Form.Select
-              value={focus}
-              onChange={(e) => setFocus(e.target.value as Focus)}
+              value={value.focus}
+              onChange={(e) =>
+                onChange({ ...value, focus: e.target.value as Focus })
+              }
             >
               {focusOptions.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -101,8 +99,10 @@ function Preferences() {
             </div>
 
             <Form.Select
-              value={pacing}
-              onChange={(e) => setPacing(e.target.value as Pacing)}
+              value={value.pacing}
+              onChange={(e) =>
+                onChange({ ...value, pacing: e.target.value as Pacing })
+              }
             >
               <option value="light">🧘 Lighter</option>
               <option value="balanced">⚖️ Balanced</option>
@@ -115,20 +115,20 @@ function Preferences() {
               Max heavy CS courses
             </Form.Label>
             <div className="text-muted small mb-2">
-              Limits how many "heavy" CS courses we try to schedule together
+              Limits how many “heavy” CS courses we try to schedule together
             </div>
 
             <ButtonGroup>
-              {[1, 2, 3].map((n) => (
+              {([1, 2, 3] as const).map((n) => (
                 <ToggleButton
                   key={n}
                   id={`maxHeavy-${n}`}
                   type="radio"
                   name="maxHeavy"
                   value={n}
-                  variant={maxHeavy === n ? "primary" : "outline-primary"}
-                  checked={maxHeavy === n}
-                  onChange={() => setMaxHeavy(n)}
+                  variant={value.maxHeavy === n ? "primary" : "outline-primary"}
+                  checked={value.maxHeavy === n}
+                  onChange={() => onChange({ ...value, maxHeavy: n })}
                 >
                   {n}
                 </ToggleButton>
@@ -139,15 +139,17 @@ function Preferences() {
           <Col xs={12}>
             <Form.Label className="fw-semibold">Options</Form.Label>
             <div className="text-muted small mb-2">
-              These slightly bias recommendations (they don't hard-block).
+              These slightly bias recommendations (they don’t hard-block).
             </div>
 
             <Form.Check
               type="switch"
               id="pref-unlock"
               label="Prefer courses that unlock prerequisites"
-              checked={prioritizeUnlocks}
-              onChange={(e) => setPrioritizeUnlocks(e.target.checked)}
+              checked={value.prioritizeUnlocks}
+              onChange={(e) =>
+                onChange({ ...value, prioritizeUnlocks: e.target.checked })
+              }
               className="mb-2"
             />
 
@@ -155,15 +157,26 @@ function Preferences() {
               type="switch"
               id="pref-avoid-prog"
               label="Avoid too many programming-heavy courses in one term"
-              checked={avoidTooManyProg}
-              onChange={(e) => setAvoidTooManyProg(e.target.checked)}
+              checked={value.avoidTooManyProg}
+              onChange={(e) =>
+                onChange({ ...value, avoidTooManyProg: e.target.checked })
+              }
             />
           </Col>
         </Row>
       </Card.Body>
-      <Button variant="primary" size="lg" as={Link} to={"/builder/schedule"}>
-        Generate Schedule →
-      </Button>
+
+      <Card.Body className="pt-0">
+        <Button
+          className="w-100"
+          variant="primary"
+          size="lg"
+          as={Link}
+          to="/builder/schedule"
+        >
+          Generate Schedule →
+        </Button>
+      </Card.Body>
     </Card>
   );
 }
