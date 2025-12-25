@@ -15,6 +15,7 @@ import courses from "../data/data";
 import type { CsCourse } from "../types/course";
 import type { CsPrefs } from "../types/preferences";
 import { DEFAULT_CS_PREFS } from "../types/preferences";
+import Modal from "react-bootstrap/esm/Modal";
 
 function Schedule() {
   const [completed] = useLocalStorage<CsCourse[]>(
@@ -51,6 +52,11 @@ function Schedule() {
   const selectedCourses = scheduleState.selected
     .map((s) => courseById.get(s.id))
     .filter(Boolean) as CsCourse[];
+
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
 
   return (
     <Container className="py-4">
@@ -149,9 +155,35 @@ function Schedule() {
                     >
                       Swap
                     </Button>
-                    <Button variant="outline-secondary" size="sm" disabled>
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={handleShow}
+                    >
                       More Details
                     </Button>
+                    <div
+                      className="modal show"
+                      style={{ display: "block", position: "initial" }}
+                    >
+                      <Modal show={show} onHide={handleClose}>
+                        <Modal.Header closeButton>
+                          <Modal.Title>{course.code}</Modal.Title>
+                        </Modal.Header>
+
+                        <Modal.Body>
+                          {course.title}
+                          <br />
+                          {course.credits} credits
+                        </Modal.Body>
+
+                        <Modal.Footer>
+                          <Button variant="primary" onClick={handleClose}>
+                            Close
+                          </Button>
+                        </Modal.Footer>
+                      </Modal>
+                    </div>
                   </div>
                 </Card.Body>
               </Card>
