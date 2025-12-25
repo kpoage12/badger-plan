@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import Alert from "react-bootstrap/Alert";
 import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
@@ -26,17 +26,29 @@ function Schedule() {
     DEFAULT_CS_PREFS
   );
 
-  const completedIDs = completed.map((c) => c.id);
-
   const courseById = useMemo(() => {
     const map = new Map<string, CsCourse>();
     (courses as CsCourse[]).forEach((c) => map.set(c.id, c));
     return map;
   }, []);
 
-  const schedule = generateSchedule(courses as CsCourse[], completedIDs, prefs);
+  const [selected, setSelected] = useState({ set: false, courseID: "" });
 
-  const selectedCourses = schedule.selected
+  const completedIDs = useMemo(() => completed.map((c) => c.id), [completed]);
+
+  const generated = useMemo(
+    () => generateSchedule(courses as CsCourse[], completedIDs, prefs),
+    [completedIDs, prefs]
+  );
+
+  const [scheduleState, setScheduleState] = useState(generated);
+
+  useEffect(() => {
+    setScheduleState(generated);
+    setSelected({ set: false, courseID: "" });
+  }, [generated]);
+
+  const selectedCourses = scheduleState.selected
     .map((s) => courseById.get(s.id))
     .filter(Boolean) as CsCourse[];
 
@@ -56,7 +68,8 @@ function Schedule() {
 
           <h1 className="h3 mb-1">Recommended Schedule</h1>
           <div className="text-muted">
-            {prefs.csCount} CS courses • {schedule.estimatedCredits} credits •{" "}
+            {prefs.csCount} CS courses • {scheduleState.estimatedCredits}{" "}
+            credits •{" "}
             {prefs.focus === "none"
               ? "No track focus"
               : `Focus: ${prefs.focus}`}{" "}
@@ -71,9 +84,9 @@ function Schedule() {
           Edit Completed Courses
         </Button>
       </div>
-      {schedule.warnings.length > 0 && (
+      {scheduleState.warnings.length > 0 && (
         <div className="mb-3">
-          {schedule.warnings.map((w) => (
+          {scheduleState.warnings.map((w) => (
             <Alert key={w.code} variant="warning" className="mb-2">
               {w.message}
             </Alert>
@@ -90,7 +103,7 @@ function Schedule() {
           </div>
         </Col>
 
-        {schedule.selected.map((s) => {
+        {scheduleState.selected.map((s) => {
           const course = courseById.get(s.id);
           if (!course) {
             return (
@@ -123,7 +136,17 @@ function Schedule() {
                   </Card.Subtitle>
                   <Card.Text className="small mb-3">{s.reason}</Card.Text>
                   <div className="mt-auto d-grid gap-2">
-                    <Button variant="outline-primary" size="sm" disabled>
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      onClick={() => {
+                        if (selected.set && selected.courseID === course.id) {
+                          setSelected({ set: false, courseID: "" });
+                        } else {
+                          setSelected({ set: true, courseID: course.id });
+                        }
+                      }}
+                    >
                       Swap
                     </Button>
                     <Button variant="outline-secondary" size="sm" disabled>
@@ -140,8 +163,14 @@ function Schedule() {
         <div className="d-flex align-items-center justify-content-between mb-2">
           <h2 className="h5 mb-0">Alternatives</h2>
         </div>
+        {selected.set && (
+          <Alert variant="info" className="mb-3">
+            Choose a course to swap in for <strong>{selected.courseID}</strong>.
+          </Alert>
+        )}
+
         <div className="d-flex gap-3 overflow-auto pb-2">
-          {schedule.alternatives.slice(0, 12).map((id) => {
+          {scheduleState.alternatives.slice(0, 12).map((id) => {
             const c = courseById.get(id);
             if (!c) return null;
             return (
@@ -154,6 +183,45 @@ function Schedule() {
                     </Badge>
                   </div>
                   <div className="text-muted small">{c.title}</div>
+                  {selected.set && (
+                    <div className="mt-2 d-grid gap-2">
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => {
+                          setScheduleState((prev) => {
+                            const newAlternatives = prev.alternatives
+                              .filter((altId) => altId !== c.id)
+                              .concat(selected.courseID);
+
+                            const newSelected = prev.selected
+                              .filter((sel) => sel.id !== selected.courseID)
+                              .concat({
+                                id: c.id,
+                                reason: `Swapped with ${selected.courseID}`,
+                              });
+                            const newEstimatedCredits = newSelected.reduce(
+                              (sum, sel) => {
+                                const course = courseById.get(sel.id);
+                                return sum + (course?.credits ?? 0);
+                              },
+                              0
+                            );
+                            return {
+                              ...prev,
+                              alternatives: newAlternatives,
+                              selected: newSelected,
+                              estimatedCredits: newEstimatedCredits,
+                            };
+                          });
+
+                          setSelected({ set: false, courseID: "" });
+                        }}
+                      >
+                        Swap
+                      </Button>
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             );
