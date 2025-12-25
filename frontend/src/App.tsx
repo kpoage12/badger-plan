@@ -17,7 +17,7 @@ function App() {
           <Route path="/browse" element={<Browse />} />
           <Route path="/builder/completed-courses" element={<Builder />} />
           <Route path="/builder/preferences" element={<PreferencesPage />} />
-          <Route path="/builder/scheduler" element={<Schedule />} />
+          <Route path="/builder/schedule" element={<Schedule />} />
         </Routes>
       </main>
     </div>
