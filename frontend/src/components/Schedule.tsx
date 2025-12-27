@@ -9,15 +9,21 @@ import Row from "react-bootstrap/Row";
 import Stack from "react-bootstrap/Stack";
 import { Link } from "react-router-dom";
 
-import { generateSchedule } from "../planner/generateSchedule";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import courses from "../data/data";
 import type { CsCourse } from "../types/course";
 import type { CsPrefs } from "../types/preferences";
 import { DEFAULT_CS_PREFS } from "../types/preferences";
 import Modal from "react-bootstrap/esm/Modal";
+import { getSchedule } from "../services/planner";
+import type { generateSchedule } from "../planner/generateSchedule";
 
 function Schedule() {
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
   const [completed] = useLocalStorage<CsCourse[]>(
     "badgerplan.completedCourses",
     []
@@ -27,36 +33,54 @@ function Schedule() {
     DEFAULT_CS_PREFS
   );
 
+  const completedIDs = useMemo(() => completed.map((c) => c.id), [completed]);
+
   const courseById = useMemo(() => {
     const map = new Map<string, CsCourse>();
     (courses as CsCourse[]).forEach((c) => map.set(c.id, c));
     return map;
   }, []);
 
-  const [selected, setSelected] = useState({ set: false, courseID: "" });
-
-  const completedIDs = useMemo(() => completed.map((c) => c.id), [completed]);
-
-  const generated = useMemo(
-    () => generateSchedule(courses as CsCourse[], completedIDs, prefs),
-    [completedIDs, prefs]
-  );
-
-  const [scheduleState, setScheduleState] = useState(generated);
+  const [scheduleState, setScheduleState] = useState<ReturnType<
+    typeof generateSchedule
+  > | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [swapFromId, setSwapFromId] = useState<string | null>(null);
 
   useEffect(() => {
-    setScheduleState(generated);
-    setSelected({ set: false, courseID: "" });
-  }, [generated]);
+    let cancelled = false;
 
-  const selectedCourses = scheduleState.selected
-    .map((s) => courseById.get(s.id))
-    .filter(Boolean) as CsCourse[];
+    async function run() {
+      setLoading(true);
+      setError(null);
 
-  const [show, setShow] = useState(false);
+      try {
+        const result = await getSchedule(
+          courses as CsCourse[],
+          completedIDs,
+          prefs
+        );
+        if (!cancelled) setScheduleState(result);
+      } catch (e) {
+        if (!cancelled)
+          setError(
+            e instanceof Error ? e.message : "Failed to generate schedule"
+          );
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [completedIDs, prefs]);
+
+  if (loading) return <h2 className="p-4">Generating schedule…</h2>;
+  if (error) return <h2 className="p-4">Error: {error}</h2>;
+  if (!scheduleState) return null;
 
   return (
     <Container className="py-4">
@@ -104,7 +128,7 @@ function Schedule() {
           <div className="d-flex align-items-center justify-content-between">
             <h2 className="h5 mb-0">This term</h2>
             <Badge bg="secondary">
-              {selectedCourses.length}/{prefs.csCount} courses
+              {scheduleState.selected.length}/{prefs.csCount} courses
             </Badge>
           </div>
         </Col>
@@ -143,17 +167,17 @@ function Schedule() {
                   <Card.Text className="small mb-3">{s.reason}</Card.Text>
                   <div className="mt-auto d-grid gap-2">
                     <Button
-                      variant="outline-primary"
+                      variant={
+                        swapFromId === course.id ? "primary" : "outline-primary"
+                      }
                       size="sm"
-                      onClick={() => {
-                        if (selected.set && selected.courseID === course.id) {
-                          setSelected({ set: false, courseID: "" });
-                        } else {
-                          setSelected({ set: true, courseID: course.id });
-                        }
-                      }}
+                      onClick={() =>
+                        setSwapFromId((prev) =>
+                          prev === course.id ? null : course.id
+                        )
+                      }
                     >
-                      Swap
+                      {swapFromId === course.id ? "Cancel Swap" : "Swap"}
                     </Button>
                     <Button
                       variant="outline-secondary"
@@ -195,9 +219,9 @@ function Schedule() {
         <div className="d-flex align-items-center justify-content-between mb-2">
           <h2 className="h5 mb-0">Alternatives</h2>
         </div>
-        {selected.set && (
+        {swapFromId && (
           <Alert variant="info" className="mb-3">
-            Choose a course to swap in for <strong>{selected.courseID}</strong>.
+            Choose a course to swap in for <strong>{swapFromId}</strong>.
           </Alert>
         )}
 
@@ -215,27 +239,29 @@ function Schedule() {
                     </Badge>
                   </div>
                   <div className="text-muted small">{c.title}</div>
-                  {selected.set && (
+                  {swapFromId && (
                     <div className="mt-2 d-grid gap-2">
                       <Button
                         variant="outline-primary"
                         size="sm"
                         onClick={() => {
                           setScheduleState((prev) => {
+                            if (!prev) return prev;
                             const newAlternatives = prev.alternatives
                               .filter((altId) => altId !== c.id)
-                              .concat(selected.courseID);
+                              .concat(swapFromId);
 
                             const newSelected = prev.selected
-                              .filter((sel) => sel.id !== selected.courseID)
+                              .filter((sel) => sel.id !== swapFromId)
                               .concat({
                                 id: c.id,
-                                reason: `Swapped with ${selected.courseID}`,
+                                reason: `Swapped with ${swapFromId}`,
                               });
+
                             const newEstimatedCredits = newSelected.reduce(
                               (sum, sel) => {
-                                const course = courseById.get(sel.id);
-                                return sum + (course?.credits ?? 0);
+                                const courseObj = courseById.get(sel.id);
+                                return sum + (courseObj?.credits ?? 0);
                               },
                               0
                             );
@@ -244,13 +270,14 @@ function Schedule() {
                               alternatives: newAlternatives,
                               selected: newSelected,
                               estimatedCredits: newEstimatedCredits,
+                              warnings: prev.warnings,
                             };
                           });
 
-                          setSelected({ set: false, courseID: "" });
+                          setSwapFromId(null);
                         }}
                       >
-                        Swap
+                        Swap in
                       </Button>
                     </div>
                   )}
