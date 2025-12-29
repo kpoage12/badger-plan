@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Alert from "react-bootstrap/Alert";
 import Badge from "react-bootstrap/Badge";
 import Button from "react-bootstrap/Button";
@@ -11,9 +11,9 @@ import { Link } from "react-router-dom";
 
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import courses from "../data/data";
-import type { CsCourse } from "../types/course";
-import type { CsPrefs } from "../types/preferences";
-import { DEFAULT_CS_PREFS } from "../types/preferences";
+import type { CsCourse } from "../../../shared/types/course";
+import type { CsPrefs } from "../../../shared/types/preferences";
+import { DEFAULT_CS_PREFS } from "../../../shared/types/preferences";
 import Modal from "react-bootstrap/esm/Modal";
 import { getSchedule } from "../services/planner";
 import type { generateSchedule } from "../planner/generateSchedule";

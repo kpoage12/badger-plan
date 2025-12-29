@@ -6,8 +6,8 @@ import ToggleButton from "react-bootstrap/ToggleButton";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Link } from "react-router-dom";
-import type { Focus, Pacing } from "../types/course";
-import type { CsPrefs } from "../types/preferences";
+import type { Focus, Pacing } from "../../../shared/types/course";
+import type { CsPrefs } from "../../../shared/types/preferences";
 
 type Props = {
   value: CsPrefs;

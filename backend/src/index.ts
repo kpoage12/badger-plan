@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import stateRouter from "./routes/state.js";
+import scheduleRouter from "./routes/schedule.js"
 
 const app = express();
 
@@ -8,6 +9,7 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
 app.use("/api", stateRouter);
+app.use("/api", scheduleRouter);
 
 app.get("/health", (_, res) => res.json({ ok: true }));
 

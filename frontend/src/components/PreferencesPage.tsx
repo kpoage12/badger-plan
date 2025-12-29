@@ -1,7 +1,7 @@
 import Preferences from "./Preferences";
-import type { CsPrefs } from "../types/preferences";
+import type { CsPrefs } from "../../../shared/types/preferences";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { DEFAULT_CS_PREFS } from "../types/preferences";
+import { DEFAULT_CS_PREFS } from "../../../shared/types/preferences";
 
 function PreferencesPage() {
   const [prefs, setPrefs] = useLocalStorage<CsPrefs>(

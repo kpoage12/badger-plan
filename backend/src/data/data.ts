@@ -1,4 +1,4 @@
-import type { CsCourse } from "../../../shared/types/course";
+import type { CsCourse } from "../../../shared/types/course.js";
 
 const csCourses: CsCourse[] = [
   {

@@ -1,6 +1,6 @@
-import type { CsCourse } from "../../../shared/types/course";
-import type { CsPrefs } from "../../../shared/types/preferences";
-import type { GeneratedSchedule } from "../../../shared/types/schedule";
+import type { CsCourse } from "../../../shared/types/course.js";
+import type { CsPrefs } from "../../../shared/types/preferences.js";
+import type { GeneratedSchedule } from "../../../shared/types/schedule.js";
 
 function prereqsMet(course: CsCourse, completed: Set<string>) {
   if (!course.prereqs || course.prereqs.length === 0) return true;

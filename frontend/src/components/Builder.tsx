@@ -10,8 +10,7 @@ import Badge from "react-bootstrap/Badge";
 import courses from "../data/data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { Link } from "react-router-dom";
-import { DEFAULT_CS_PREFS, type CsPrefs } from "../types/preferences";
-import type { CsCourse } from "../types/course";
+import type { CsCourse } from "../../../shared/types/course";
 
 function Builder() {
   const [completed, setCompleted] = useLocalStorage<CsCourse[]>(
@@ -19,11 +18,6 @@ function Builder() {
     []
   );
   const [query, setQuery] = useState("");
-
-  const [prefs, setPrefs] = useLocalStorage<CsPrefs>(
-    "badgerplan.csPrefs.v1",
-    DEFAULT_CS_PREFS
-  );
 
   const completedSet = useMemo(
     () => new Set(completed.map((c) => c.id)),
