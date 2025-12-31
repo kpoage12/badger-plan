@@ -1,16 +1,26 @@
 import express from "express";
 import cors from "cors";
-import stateRouter from "./routes/state.js";
-import scheduleRouter from "./routes/schedule.js"
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173" }));
-app.use(express.json());
+app.use(helmet());
+app.use(express.json({ limit: "200kb" }));
 
-app.use("/api", stateRouter);
-app.use("/api", scheduleRouter);
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173")
+  .split(",")
+  .map(s => s.trim());
 
-app.get("/health", (_, res) => res.json({ ok: true }));
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("Not allowed by CORS"));
+  }
+}));
 
-app.listen(3001, ()=> console.log("API on http://localhost:3001"))
+app.use("/api/schedule", rateLimit({
+  windowMs: 60_000,
+  max: 60,
+}));
