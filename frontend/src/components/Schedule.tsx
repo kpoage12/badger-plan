@@ -19,6 +19,8 @@ import { getSchedule } from "../services/planner";
 import type { generateSchedule } from "../planner/generateSchedule";
 
 function Schedule() {
+  const API_BASE = import.meta.env.VITE_API_BASE;
+
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
@@ -56,12 +58,8 @@ function Schedule() {
       setError(null);
 
       try {
-        const result = await getSchedule(
-          courses as CsCourse[],
-          completedIDs,
-          prefs
-        );
-        if (!cancelled) setScheduleState(result);
+        const result = await getSchedule(completedIDs, prefs);
+        if (!cancelled) setScheduleState(result.schedule);
       } catch (e) {
         if (!cancelled)
           setError(
@@ -114,7 +112,7 @@ function Schedule() {
           Edit Completed Courses
         </Button>
       </div>
-      {scheduleState.warnings.length > 0 && (
+      {scheduleState.warnings && scheduleState.warnings.length > 0 && (
         <div className="mb-3">
           {scheduleState.warnings.map((w) => (
             <Alert key={w.code} variant="warning" className="mb-2">
