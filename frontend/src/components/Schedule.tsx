@@ -5,22 +5,27 @@ import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
+import Modal from "react-bootstrap/esm/Modal";
 import Row from "react-bootstrap/Row";
 import Stack from "react-bootstrap/Stack";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import courses from "../data/data";
 import type { CsCourse } from "../../../shared/types/course";
 import type { CsPrefs } from "../../../shared/types/preferences";
 import { DEFAULT_CS_PREFS } from "../../../shared/types/preferences";
-import Modal from "react-bootstrap/esm/Modal";
-import { getSchedule } from "../services/planner";
+import courses from "../data/data";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import type { generateSchedule } from "../planner/generateSchedule";
+import { getSchedule } from "../services/planner";
+import type { SessionUser } from "../services/session";
 
-function Schedule() {
-  const API_BASE = import.meta.env.VITE_API_BASE;
+type ScheduleProps = {
+  sessionUser: SessionUser | null;
+  sessionLoading: boolean;
+};
 
+function Schedule({ sessionUser, sessionLoading }: ScheduleProps) {
+  const navigate = useNavigate();
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
@@ -35,11 +40,11 @@ function Schedule() {
     DEFAULT_CS_PREFS
   );
 
-  const completedIDs = useMemo(() => completed.map((c) => c.id), [completed]);
+  const completedIDs = useMemo(() => completed.map((course) => course.id), [completed]);
 
   const courseById = useMemo(() => {
     const map = new Map<string, CsCourse>();
-    (courses as CsCourse[]).forEach((c) => map.set(c.id, c));
+    (courses as CsCourse[]).forEach((course) => map.set(course.id, course));
     return map;
   }, []);
 
@@ -51,6 +56,15 @@ function Schedule() {
   const [swapFromId, setSwapFromId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (sessionLoading) {
+      return;
+    }
+
+    if (!sessionUser) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
     async function run() {
@@ -59,22 +73,44 @@ function Schedule() {
 
       try {
         const result = await getSchedule(completedIDs, prefs);
-        if (!cancelled) setScheduleState(result.schedule);
-      } catch (e) {
-        if (!cancelled)
+        if (!cancelled) {
+          setScheduleState(result.schedule);
+        }
+      } catch (err) {
+        if (!cancelled) {
           setError(
-            e instanceof Error ? e.message : "Failed to generate schedule"
+            err instanceof Error ? err.message : "Failed to generate schedule"
           );
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    run();
+    void run();
+
     return () => {
       cancelled = true;
     };
-  }, [completedIDs, prefs]);
+  }, [completedIDs, prefs, sessionLoading, sessionUser]);
+
+  if (sessionLoading) return <h2 className="p-4">Loading your account…</h2>;
+
+  if (!sessionUser) {
+    return (
+      <Container className="py-4">
+        <Alert variant="info">
+          Create an account before generating a schedule so BadgerPlan can save it
+          to your profile.
+        </Alert>
+        <Button onClick={() => navigate("/signup")}>
+          Go to Sign Up
+        </Button>
+      </Container>
+    );
+  }
 
   if (loading) return <h2 className="p-4">Generating schedule…</h2>;
   if (error) return <h2 className="p-4">Error: {error}</h2>;
@@ -85,38 +121,37 @@ function Schedule() {
       <div className="d-flex align-items-start justify-content-between mb-3">
         <div>
           <Button
-            as={Link}
-            to="/builder/preferences"
             variant="outline-primary"
             size="sm"
             className="mb-2"
+            onClick={() => navigate("/builder/preferences")}
           >
             ← Back to Preferences
           </Button>
 
           <h1 className="h3 mb-1">Recommended Schedule</h1>
           <div className="text-muted">
-            {prefs.csCount} CS courses • {scheduleState.estimatedCredits}{" "}
-            credits •{" "}
-            {prefs.focus === "none"
-              ? "No track focus"
-              : `Focus: ${prefs.focus}`}{" "}
-            • {prefs.pacing}
+            {prefs.csCount} CS courses • {scheduleState.estimatedCredits} credits
+            {" "}•{" "}
+            {prefs.focus === "none" ? "No track focus" : `Focus: ${prefs.focus}`}
+            {" "}• {prefs.pacing}
+          </div>
+          <div className="small text-success mt-2">
+            Saved to {sessionUser.email ?? "your account"}.
           </div>
         </div>
         <Button
-          as={Link}
-          to="/builder/completed-courses"
           variant="outline-secondary"
+          onClick={() => navigate("/builder/completed-courses")}
         >
           Edit Completed Courses
         </Button>
       </div>
       {scheduleState.warnings && scheduleState.warnings.length > 0 && (
         <div className="mb-3">
-          {scheduleState.warnings.map((w) => (
-            <Alert key={w.code} variant="warning" className="mb-2">
-              {w.message}
+          {scheduleState.warnings.map((warning) => (
+            <Alert key={warning.code} variant="warning" className="mb-2">
+              {warning.message}
             </Alert>
           ))}
         </div>
@@ -131,14 +166,14 @@ function Schedule() {
           </div>
         </Col>
 
-        {scheduleState.selected.map((s) => {
-          const course = courseById.get(s.id);
+        {scheduleState.selected.map((selection) => {
+          const course = courseById.get(selection.id);
           if (!course) {
             return (
-              <Col key={s.id} xs={12} sm={6} lg={4}>
+              <Col key={selection.id} xs={12} sm={6} lg={4}>
                 <Card className="h-100">
                   <Card.Body>
-                    <Card.Title>{s.id}</Card.Title>
+                    <Card.Title>{selection.id}</Card.Title>
                     <Card.Text className="text-muted">
                       Could not find course details in catalog.
                     </Card.Text>
@@ -162,7 +197,7 @@ function Schedule() {
                   <Card.Subtitle className="text-muted mb-2">
                     {course.title}
                   </Card.Subtitle>
-                  <Card.Text className="small mb-3">{s.reason}</Card.Text>
+                  <Card.Text className="small mb-3">{selection.reason}</Card.Text>
                   <div className="mt-auto d-grid gap-2">
                     <Button
                       variant={
@@ -170,8 +205,8 @@ function Schedule() {
                       }
                       size="sm"
                       onClick={() =>
-                        setSwapFromId((prev) =>
-                          prev === course.id ? null : course.id
+                        setSwapFromId((current) =>
+                          current === course.id ? null : course.id
                         )
                       }
                     >
@@ -225,50 +260,51 @@ function Schedule() {
 
         <div className="d-flex gap-3 overflow-auto pb-2">
           {scheduleState.alternatives.slice(0, 12).map((id) => {
-            const c = courseById.get(id);
-            if (!c) return null;
+            const course = courseById.get(id);
+            if (!course) return null;
             return (
               <Card key={id} style={{ minWidth: 260 }}>
                 <Card.Body>
                   <div className="d-flex align-items-center justify-content-between">
-                    <div className="fw-semibold">{c.code}</div>
+                    <div className="fw-semibold">{course.code}</div>
                     <Badge bg="light" text="dark">
-                      {c.credits} cr
+                      {course.credits} cr
                     </Badge>
                   </div>
-                  <div className="text-muted small">{c.title}</div>
+                  <div className="text-muted small">{course.title}</div>
                   {swapFromId && (
                     <div className="mt-2 d-grid gap-2">
                       <Button
                         variant="outline-primary"
                         size="sm"
                         onClick={() => {
-                          setScheduleState((prev) => {
-                            if (!prev) return prev;
-                            const newAlternatives = prev.alternatives
-                              .filter((altId) => altId !== c.id)
+                          setScheduleState((current) => {
+                            if (!current) return current;
+                            const newAlternatives = current.alternatives
+                              .filter((altId) => altId !== course.id)
                               .concat(swapFromId);
 
-                            const newSelected = prev.selected
-                              .filter((sel) => sel.id !== swapFromId)
+                            const newSelected = current.selected
+                              .filter((selection) => selection.id !== swapFromId)
                               .concat({
-                                id: c.id,
+                                id: course.id,
                                 reason: `Swapped with ${swapFromId}`,
                               });
 
                             const newEstimatedCredits = newSelected.reduce(
-                              (sum, sel) => {
-                                const courseObj = courseById.get(sel.id);
+                              (sum, selection) => {
+                                const courseObj = courseById.get(selection.id);
                                 return sum + (courseObj?.credits ?? 0);
                               },
                               0
                             );
+
                             return {
-                              ...prev,
+                              ...current,
                               alternatives: newAlternatives,
                               selected: newSelected,
                               estimatedCredits: newEstimatedCredits,
-                              warnings: prev.warnings,
+                              warnings: current.warnings,
                             };
                           });
 

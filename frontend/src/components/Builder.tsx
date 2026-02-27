@@ -9,10 +9,11 @@ import Badge from "react-bootstrap/Badge";
 
 import courses from "../data/data";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { CsCourse } from "../../../shared/types/course";
 
 function Builder() {
+  const navigate = useNavigate();
   const [completed, setCompleted] = useLocalStorage<CsCourse[]>(
     "badgerplan.completedCourses",
     []
@@ -123,8 +124,7 @@ function Builder() {
               <Button
                 variant="primary"
                 size="lg"
-                as={Link}
-                to={"/builder/preferences"}
+                onClick={() => navigate("/builder/preferences")}
               >
                 Continue to Preferences →
               </Button>

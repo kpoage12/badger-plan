@@ -1,11 +1,19 @@
-import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-function Home() {
+import type { SessionUser } from "../services/session";
+
+type HomeProps = {
+  sessionUser: SessionUser | null;
+};
+
+function Home({ sessionUser }: HomeProps) {
+  const navigate = useNavigate();
+
   return (
     <Container>
       <div className="py-5 text-center">
@@ -13,8 +21,13 @@ function Home() {
         <p className="lead text muted mb-4">
           Build a semester plan based on what you've already taken
         </p>
-        <Button as={Link} to="/builder/completed-courses" size="lg">
-          Start Planning
+        <Button
+          onClick={() =>
+            navigate(sessionUser ? "/builder/completed-courses" : "/signup")
+          }
+          size="lg"
+        >
+          {sessionUser ? "Start Planning" : "Create Account to Save Plans"}
         </Button>
       </div>
 
@@ -23,9 +36,10 @@ function Home() {
           <Card className="homeStepCard h-100">
             <Card.Body>
               <div className="stepIcon">1</div>
-              <Card.Title className="mt-3">Add completed courses</Card.Title>
+              <Card.Title className="mt-3">Create your account</Card.Title>
               <Card.Text className="text-muted">
-                Tell use what credits or courses you've already earned.
+                Sign up once and BadgerPlan keeps your saved planning data tied to
+                your session.
               </Card.Text>
             </Card.Body>
           </Card>
@@ -34,9 +48,9 @@ function Home() {
           <Card className="homeStepCard h-100">
             <Card.Body>
               <div className="stepIcon">2</div>
-              <Card.Title className="mt-3">Set goals</Card.Title>
+              <Card.Title className="mt-3">Add completed courses</Card.Title>
               <Card.Text>
-                Choose your term, class count, and preferences.
+                Record what you have already finished and tune your preferences.
               </Card.Text>
             </Card.Body>
           </Card>
@@ -46,9 +60,10 @@ function Home() {
             <Card.Body>
               <div className="stepIcon">3</div>
 
-              <Card.Title className="mt-3">Get recommendations</Card.Title>
+              <Card.Title className="mt-3">Generate and save</Card.Title>
               <Card.Text>
-                We'll suggest classes and alternative options.
+                Creating a schedule posts it to the backend and stores it on your
+                account.
               </Card.Text>
             </Card.Body>
           </Card>

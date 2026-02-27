@@ -5,7 +5,7 @@ import ButtonGroup from "react-bootstrap/ButtonGroup";
 import ToggleButton from "react-bootstrap/ToggleButton";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { Focus, Pacing } from "../../../shared/types/course";
 import type { CsPrefs } from "../../../shared/types/preferences";
 
@@ -15,6 +15,7 @@ type Props = {
 };
 
 function Preferences({ value, onChange }: Props) {
+  const navigate = useNavigate();
   const csCountOptions: Array<2 | 3 | 4> = [2, 3, 4];
 
   const focusOptions: { value: Focus; label: string }[] = [
@@ -32,8 +33,7 @@ function Preferences({ value, onChange }: Props) {
           variant="outline-primary"
           size="sm"
           className="px-2 mb-4"
-          as={Link}
-          to="/builder/completed-courses"
+          onClick={() => navigate("/builder/completed-courses")}
         >
           ← Back
         </Button>
@@ -171,8 +171,7 @@ function Preferences({ value, onChange }: Props) {
           className="w-100"
           variant="primary"
           size="lg"
-          as={Link}
-          to="/builder/schedule"
+          onClick={() => navigate("/builder/schedule")}
         >
           Generate Schedule →
         </Button>

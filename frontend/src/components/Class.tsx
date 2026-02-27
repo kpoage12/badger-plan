@@ -2,7 +2,7 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import { useState } from "react";
 import Modal from "react-bootstrap/esm/Modal";
-import type { CsCourse } from "../types/course";
+import type { CsCourse } from "../../../shared/types/course";
 
 function Class({ code, title, credits }: CsCourse) {
   const [show, setShow] = useState(false);
