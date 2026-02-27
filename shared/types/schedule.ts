@@ -1,4 +1,4 @@
-import type { CourseId } from "./course";
+import type { CourseId } from "./course.js";
 
 export type ScheduleWarning =
   | "NOT_ENOUGH_ELIGIBLE"

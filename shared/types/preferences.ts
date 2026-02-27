@@ -1,4 +1,4 @@
-import type { Pacing, Focus } from "./course";
+import type { Pacing, Focus } from "./course.js";
 
 export type CsPrefs = {
   csCount: 2 | 3 | 4;
