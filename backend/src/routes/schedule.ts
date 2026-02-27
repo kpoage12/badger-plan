@@ -2,7 +2,9 @@ import { Router, type Request, type Response } from "express";
 import crypto from "crypto";
 
 import courses from "../data/data.js";
+import { prisma } from "../db/prisma.js";
 import { generateSchedule } from "../planner/generateSchedule.js";
+import { getSessionUser } from "../auth/session.js";
 
 import type { CourseId, CsCourse, Pacing, Focus } from "../../../shared/types/course.js";
 import type { CsPrefs } from "../../../shared/types/preferences.js";
@@ -11,7 +13,6 @@ import type { GeneratedSchedule } from "../../../shared/types/schedule.js";
 type ScheduleRequestBody = {
   completedIds?: unknown;
   prefs?: unknown;
-  clientId?: unknown;
 };
 
 type ErrorPayload = {
@@ -91,7 +92,7 @@ function isCsPrefs(x: unknown): x is CsPrefs {
 
 router.post(
   "/schedule",
-  (
+  async (
     req: Request<unknown, unknown, ScheduleRequestBody>,
     res: Response<ScheduleResponsePayload | ErrorPayload>
   ) => {
@@ -103,7 +104,7 @@ router.post(
     res.setHeader("x-request-id", requestId);
 
     const t0 = Date.now();
-    const { completedIds, prefs, clientId } = req.body ?? {};
+    const { completedIds, prefs } = req.body ?? {};
 
     if (!Array.isArray(completedIds)) {
       return badRequest(res, "completedIds must be an array of course IDs");
@@ -133,21 +134,11 @@ router.post(
       });
     }
 
-    if (
-      clientId != null &&
-      (typeof clientId !== "string" || clientId.length < 8 || clientId.length > 128)
-    ) {
-      return badRequest(res, "clientId must be a string (8-128 chars) if provided");
-    }
-
-    const typedClientId = typeof clientId === "string" ? clientId : null;
-
     const catalogVersion = "v1";
     const inputHash = crypto
       .createHash("sha256")
       .update(
         stableStringify({
-          clientId: typedClientId,
           completedIds: normalizedCompleted,
           prefs,
           catalogVersion,
@@ -161,6 +152,18 @@ router.post(
         normalizedCompleted,
         prefs
       ) as GeneratedSchedule;
+
+      const sessionUser = await getSessionUser(req);
+      if (sessionUser) {
+        await prisma.userState.update({
+          where: { id: sessionUser.id },
+          data: {
+            completedIds: normalizedCompleted,
+            prefs,
+            latestSchedule: schedule,
+          },
+        });
+      }
 
       const ms = Date.now() - t0;
 

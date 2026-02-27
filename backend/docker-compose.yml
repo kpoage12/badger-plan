@@ -1,15 +1,23 @@
 services:
-  db:
+  postgres:
     image: postgres:16
-    container_name: badgerplan-db
     environment:
-      POSTGRES_USER: badger
-      POSTGRES_PASSWORD: badger
-      POSTGRES_DB: badgerplan
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydb
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - badgerplan_pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/mydb
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
 
 volumes:
-  badgerplan_pgdata:
+  pgdata:

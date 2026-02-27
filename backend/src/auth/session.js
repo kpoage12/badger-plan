@@ -1,0 +1,70 @@
+import crypto from "crypto";
+import { prisma } from "../db/prisma.js";
+const SESSION_COOKIE = "badgerplan_session";
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
+function hashSessionToken(token) {
+    return crypto.createHash("sha256").update(token).digest("hex");
+}
+function readCookie(req, name) {
+    const raw = req.headers.cookie;
+    if (!raw)
+        return null;
+    const cookies = raw.split(";");
+    for (const entry of cookies) {
+        const [cookieName, ...rest] = entry.trim().split("=");
+        if (cookieName !== name)
+            continue;
+        const value = rest.join("=");
+        return value ? decodeURIComponent(value) : null;
+    }
+    return null;
+}
+export function hashPassword(password) {
+    const salt = crypto.randomBytes(16).toString("hex");
+    const derivedKey = crypto.scryptSync(password, salt, 64).toString("hex");
+    return `${salt}:${derivedKey}`;
+}
+export function verifyPassword(password, passwordHash) {
+    const [salt, expected] = passwordHash.split(":");
+    if (!salt || !expected)
+        return false;
+    const actual = crypto.scryptSync(password, salt, 64).toString("hex");
+    const expectedBuffer = Buffer.from(expected, "hex");
+    const actualBuffer = Buffer.from(actual, "hex");
+    if (expectedBuffer.length !== actualBuffer.length) {
+        return false;
+    }
+    return crypto.timingSafeEqual(expectedBuffer, actualBuffer);
+}
+export function createSessionToken() {
+    const token = crypto.randomBytes(32).toString("hex");
+    return { token, hash: hashSessionToken(token) };
+}
+export function setSessionCookie(res, token) {
+    res.cookie(SESSION_COOKIE, token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: SESSION_TTL_MS,
+    });
+}
+export function clearSessionCookie(res) {
+    res.clearCookie(SESSION_COOKIE, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+    });
+}
+export async function getSessionUser(req) {
+    const token = readCookie(req, SESSION_COOKIE);
+    if (!token)
+        return null;
+    return prisma.userState.findUnique({
+        where: { sessionTokenHash: hashSessionToken(token) },
+    });
+}
+export function toPublicUserState(user) {
+    const { passwordHash: _passwordHash, sessionTokenHash: _sessionTokenHash, ...publicState } = user;
+    return publicState;
+}
+//# sourceMappingURL=session.js.map

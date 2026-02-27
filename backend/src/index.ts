@@ -18,6 +18,7 @@ const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173")
   .filter(Boolean);
 
 const corsOptions: CorsOptions = {
+  credentials: true,
   origin(origin, cb) {
     if (!origin) return cb(null, true);
 
@@ -28,8 +29,6 @@ const corsOptions: CorsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(cors(corsOptions));
-
 app.use(
   "/api/schedule",
   rateLimit({
