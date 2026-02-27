@@ -10,10 +10,16 @@ import {
   hashPassword,
   setSessionCookie,
   toPublicUserState,
+  verifyPassword,
 } from "../auth/session.js";
 
 type SignupRequestBody = {
   name?: unknown;
+  email?: unknown;
+  password?: unknown;
+};
+
+type SigninRequestBody = {
   email?: unknown;
   password?: unknown;
 };
@@ -26,7 +32,11 @@ type StateRequestBody = {
 
 type ErrorPayload = {
   error: {
-    code: "BAD_REQUEST" | "UNAUTHORIZED" | "EMAIL_TAKEN";
+    code:
+      | "BAD_REQUEST"
+      | "UNAUTHORIZED"
+      | "EMAIL_TAKEN"
+      | "INVALID_CREDENTIALS";
     message: string;
     details?: unknown | null;
   };
@@ -139,6 +149,48 @@ router.post(
 
     setSessionCookie(res, session.token);
     return res.status(201).json({ user: toPublicUserState(user) });
+  }
+);
+
+router.post(
+  "/auth/signin",
+  async (
+    req: Request<unknown, unknown, SigninRequestBody>,
+    res: Response
+  ) => {
+    const email = normalizeEmail(req.body?.email);
+    const password = normalizePassword(req.body?.password);
+
+    if (!email || !password) {
+      return sendError(
+        res,
+        400,
+        "BAD_REQUEST",
+        "Email and password are required"
+      );
+    }
+
+    const user = await prisma.userState.findUnique({
+      where: { email },
+    });
+
+    if (!user?.passwordHash || !verifyPassword(password, user.passwordHash)) {
+      return sendError(
+        res,
+        401,
+        "INVALID_CREDENTIALS",
+        "Invalid email or password"
+      );
+    }
+
+    const session = createSessionToken();
+    const updatedUser = await prisma.userState.update({
+      where: { id: user.id },
+      data: { sessionTokenHash: session.hash },
+    });
+
+    setSessionCookie(res, session.token);
+    return res.json({ user: toPublicUserState(updatedUser) });
   }
 );
 
